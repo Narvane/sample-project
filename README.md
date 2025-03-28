@@ -1,343 +1,243 @@
 # Video Platform - Microservices Example
 
-This project is a **study-oriented sample** demonstrating **microservices**, **DDD**, **hexagonal architecture**, **messaging (Kafka)**, **integration with external services**, **OAuth2 authentication**, **circuit breaker**, **tracing**, **monitoring**, **SQL and NoSQL databases**, and a minimal **React/Next.js** front-end.
-
-The scope is intentionally **small**, focusing on a limited set of use cases while showcasing the **complexities** of each technology:
-- **Multiple microservices** (Java + Spring Boot and Node.js + Express)
-- **Relational database (PostgreSQL)** with **JPA** mappings (OneToOne, OneToMany, ManyToMany)
-- **NoSQL (MongoDB)** for video metadata
-- **Video streaming** and file uploads
-- **Kafka** for asynchronous events
-- **OAuth2** for authentication
-- **Circuit Breaker**, **Tracing**, and **Monitoring** tools
-
----
-
-## Table of Contents
-1. [Overview of the Project](#overview-of-the-project)  
-2. [Architecture & Microservices](#architecture--microservices)  
-   - [Gateway](#1-gateway)  
-   - [User Service (Java + Spring Boot + PostgreSQL)](#2-user-service-java--spring-boot--postgresql)  
-   - [Video Service (Node.js + Express + MongoDB)](#3-video-service-nodejs--express--mongodb)  
-   - [Playlist Service (Java + Spring Boot + PostgreSQL)](#4-playlist-service-java--spring-boot--postgresql)  
-3. [Front-End (React/Next.js)](#5-front-end-reactnextjs)  
-4. [Overall Flow Summary](#6-overall-flow-summary)  
-5. [Folder Structure Example](#7-folder-structure-example)  
-6. [Technologies and Concepts Checklist](#8-technologies-and-concepts-checklist)  
-7. [Complex Relationships in Playlist Service](#9-complex-relationships-in-playlist-service)  
-8. [Conclusion](#conclusion)
-
----
-
-## Overview of the Project
-
-We are building a **simple video sharing platform** with these main goals:
-
-- **Minimal domain** and **minimal endpoints** in each microservice to remain small and finishable.
-- **Multiple microservices**:
-  1. **User Service (Java + Spring Boot + PostgreSQL)** for user registration, authentication, user profiles, etc.
-  2. **Video Service (Node.js + Express + MongoDB)** for managing video uploads, metadata, and streaming.
-  3. **Playlist Service (Java + Spring Boot + PostgreSQL)** for demonstrating **complex JPA relationships** (OneToOne, OneToMany, ManyToMany) in a small scope.
-  4. **Gateway** (Spring Cloud Gateway or similar) for routing incoming requests and performing OAuth2 token checks, circuit breaking, etc.
-- **React/Next.js Front-End** with a minimal interface (login, video listing, video upload, playlist creation, etc.).
-- **Kafka** as a messaging system for asynchronous events (e.g., `VIDEO_UPLOADED`, `VIDEO_PROCESSED`).
-- **Integration with an external service** (e.g., a fake video transcoding or thumbnail generation API).
-- **Circuit Breaker, Tracing, Monitoring** (Resilience4j, Sleuth/Zipkin, Spring Boot Actuator, etc.).
-
----
-
-## Architecture & Microservices
-
-### 1. Gateway
-
-- **Technology**:
-  - Can be **Spring Cloud Gateway**, **Kong**, or **NGINX** (pick what you prefer).
-- **Responsibilities**:
-  1. **Receiving requests** from the front-end and routing them to:
-     - `/api/users/**` → **User Service**  
-     - `/api/videos/**` → **Video Service**  
-     - `/api/playlists/**` → **Playlist Service**
-  2. **Validating OAuth2 tokens** and propagating them to microservices.
-  3. **Circuit Breaker** (via Resilience4j or Spring Cloud Circuit Breaker) to handle service unavailability.
-  4. **Tracing**: propagate trace headers (Sleuth/Zipkin) for distributed tracing.
-
-### 2. User Service (Java + Spring Boot + PostgreSQL)
-
-#### 2.1 Scope / Domain
-
-- **Main entity**: `User`
-  - Basic attributes: `id`, `email`, `name`, `passwordHash` (if storing password locally; optionally rely on Keycloak or another IdP).
-- **Minimal Endpoints**:
-  - `POST /users` (optional if you want to allow direct registration).
-  - `GET /me`: returns the currently authenticated user’s data (using OAuth2 token).
-- **Database**:
-  - **PostgreSQL** with a `users` table.
-- **Authentication (OAuth2)**:
-  - Use **Spring Security OAuth2** + JWT or **Keycloak** as an Authorization Server.
-  - The **User Service** acts as a Resource Server validating tokens.
-
-#### 2.2 Hexagonal Architecture / DDD
-
-- **Domain Layer**: `User` entity, repository interface, domain services (e.g., “create user”, “find user”).
-- **Adapters**:
-  - **Controller** for REST endpoints.
-  - **JPA Repository** for database interactions.
-
-### 3. Video Service (Node.js + Express + MongoDB)
-
-#### 3.1 Scope / Domain
-
-- **Main entity**: `Video`
-  - Fields: `videoId`, `ownerId` (the user ID from User Service), `title`, `description`, `status` (PROCESSING, READY), `createdAt`, etc.
-  - Stored in **MongoDB** (NoSQL).
-- **Functionalities**:
-  1. **Upload** (`POST /videos`): saves metadata in MongoDB, stores the file locally or in a storage bucket (S3, etc.).
-  2. **Listing** (`GET /videos?ownerId=...`): lists the user’s videos.
-  3. **Streaming** (`GET /videos/:id/stream`): serves the video file in chunks (`Range` headers).
-
-#### 3.2 External Service Integration
-
-- E.g., call an external transcoding service after upload (real or mocked).
-- Use a **Circuit Breaker** in the Node.js layer if that external service is down.
-
-#### 3.3 Messaging (Kafka)
-
-- Publishes `VIDEO_UPLOADED` when a new video is uploaded.
-- (Optionally) listens for `VIDEO_PROCESSED` to set the video `status` to READY.
-
-#### 3.4 Hexagonal Architecture
-
-- **Domain**: Entities + Repositories (Mongo).
-- **Controllers (Express)** + Application Services.
-- **Tracing** with Jaeger or Zipkin client in Node.
-- **Monitoring**: possible `express-prometheus-middleware` or similar.
-
-### 4. Playlist Service (Java + Spring Boot + PostgreSQL)
-
-This **additional microservice** showcases **more advanced data modeling** with **JPA** (relationships: OneToOne, OneToMany, ManyToMany), without adding too many endpoints.
-
-#### 4.1 Purpose
-
-- Manage **playlists** referencing the `User` by `ownerId` (which comes from the **User Service**).
-- Exposes minimal operations that demonstrate complex relationships in a small domain.
-
-#### 4.2 Entities (Example)
-
-1. **Playlist**  
-   - `id` (PK)  
-   - `name` (String)  
-   - `ownerId` (Long or UUID, referencing User Service)  
-   - **Relationships**:
-     - **OneToOne** → `PlaylistMetadata`
-     - **OneToMany** → `List<PlaylistItem>`
-     - **ManyToMany** → `Set<Tag>`
-
-2. **PlaylistMetadata**  
-   - `id` (PK)  
-   - `description` (String)  
-   - `createdAt` (LocalDateTime)  
-   - Possibly other fields as needed  
-   - OneToOne link back to `Playlist`.
-
-3. **PlaylistItem**  
-   - `id` (PK)  
-   - `videoId` (String or UUID referencing the Video in the **Video Service**)  
-   - `position` (int)  
-   - ManyToOne link to `Playlist`.
-
-4. **Tag**  
-   - `id` (PK)  
-   - `name` (String)  
-   - ManyToMany link with `Playlist` (table `playlist_tags` in the DB).
-
-#### 4.3 JPA Mappings
-
-- **Playlist** ↔ **PlaylistMetadata**:  
-  - `@OneToOne(cascade = CascadeType.ALL, mappedBy = "playlist")` or vice versa.
-- **Playlist** ↔ **PlaylistItem**:  
-  - `@OneToMany(mappedBy = "playlist", fetch = LAZY)` in `Playlist`.  
-  - `@ManyToOne(fetch = LAZY)` in `PlaylistItem`.
-- **Playlist** ↔ **Tag**:  
-  - `@ManyToMany(fetch = LAZY)`, with a join table `playlist_tags`.
-
-#### 4.4 Minimal Endpoints
-
-Focus on just 2 or 3 endpoints to keep it small but show relational complexity:
-
-1. **`POST /playlists`**  
-   - **Request Body**: includes `ownerId`, `name`, optional tags, metadata, and items to create in one go.  
-   - **Action**: Creates a `Playlist`, `PlaylistMetadata`, related `Tag`s (if they do not exist), and `PlaylistItem`s.  
-   - **Response**: Returns the `id` of the new playlist.
-
-2. **`GET /playlists/{id}`**  
-   - **Action**: Fetches a playlist by `id` and returns:
-     - `name`, `ownerId`
-     - `metadata` (OneToOne)
-     - `items` (OneToMany, possibly paginated via `?page=...&size=...`)
-     - `tags` (ManyToMany)
-   - Demonstrates **lazy loading** or custom queries with pagination.
-
-3. (Optional) **`POST /playlists/{id}/items`**  
-   - **Action**: Add a new `PlaylistItem` referencing a `videoId` from the **Video Service**.
-
-With just these 2–3 endpoints, you can demonstrate:
-
-- **OneToOne**  
-- **OneToMany** (+ pagination)  
-- **ManyToMany**  
-- **Lazy Loading**  
-- Linking external IDs (users, videos) from other services
-
-#### 4.5 DDD & Hexagonal
-
-- **Domain Layer**: entities (`Playlist`, `PlaylistMetadata`, `PlaylistItem`, `Tag`), repository interfaces, domain services (e.g. “create playlist”).  
-- **Adapters**:
-  - **Controller** for REST.  
-  - **Database** with JPA/Hibernate.  
-  - (Optional) produce/consume Kafka events if desired.
-- **Integration with User Service**:
-  - Store `ownerId` in the `Playlist`.  
-  - Optionally, call the User Service (with a circuit breaker) to verify the user exists or fetch user details.
-
----
-
-## 5. Front-End (React/Next.js)
-
-### 5.1 Minimal Pages / Routing
-
-1. **`/login`**  
-   - Implements the OAuth2 flow. After login, you get a token (JWT) stored in local storage or cookie.
-
-2. **`/meus-videos`** (My Videos)  
-   - Calls `GET /api/videos?ownerId=<userId>` to list the user’s videos.  
-   - Links to watch each video.
-
-3. **`/upload`**  
-   - A form for uploading a video (calls `POST /api/videos`).
-
-4. **`/playlists`** (optional)  
-   - Minimal UI to create or view playlists (calls `POST /api/playlists` or `GET /api/playlists`).
-
-5. **`/playlists/:id`** (optional)  
-   - Displays a single playlist (calls `GET /api/playlists/:id`) with associated items.
-
-Use **Next.js** routing and handle private routes by checking the token. Keep it **simple** for demonstration purposes.
-
----
-
-## 6. Overall Flow Summary
-
-1. **User logs in** → front-end stores the OAuth2 token.
-2. Front-end calls the **Gateway** with `Authorization: Bearer <token>`.
-3. Gateway routes to the correct microservice:
-   - **Circuit Breaker** is active.
-   - **Tracing** with Sleuth/Zipkin or Jaeger is propagated.
-4. **User Service**:
-   - Returns basic user data (`GET /me`).
-5. **Video Service**:
-   - **Upload** → saves metadata, publishes `VIDEO_UPLOADED` event to Kafka.
-   - **List** videos by `ownerId`.
-   - **Stream** videos with a `GET /videos/:id/stream`.
-6. **Playlist Service**:
-   - **Create** a playlist with relationships (OneToOne, ManyToMany, etc.).
-   - **Fetch** a playlist (with pagination for items).
-   - Optionally, calls **User Service** to validate the `ownerId`.
-7. **Monitoring & Logs**:
-   - **Spring Boot Actuator** in Java services.
-   - Potential metrics library in Node.js.
-   - **Zipkin/Jaeger** for distributed tracing.
-
----
-
-## 7. Folder Structure Example
-
-```plaintext
-my-video-platform/
-├─ gateway/
-│   ├─ src/
-│   └─ pom.xml (Spring Cloud Gateway)
-├─ user-service/
-│   ├─ src/
-│   └─ pom.xml (Spring Boot + PostgreSQL)
-├─ video-service/
-│   ├─ src/
-│   ├─ package.json
-│   └─ ...
-├─ playlist-service/
-│   ├─ src/
-│   └─ pom.xml (Spring Boot + PostgreSQL, JPA)
-├─ front-end/
-│   ├─ pages/
-│   └─ package.json (React/Next.js)
-├─ docker-compose.yml (Kafka, PostgreSQL, MongoDB, etc.)
-└─ README.md
-```
-
-## 8. Technologies and Concepts Checklist
-
-- **Multiple Microservices**  
-  - `User Service` (Java + Spring Boot + PostgreSQL)  
-  - `Video Service` (Node.js + Express + MongoDB)  
-  - `Playlist Service` (Java + Spring Boot + PostgreSQL, with complex JPA relationships)  
-  - `Gateway` for routing
-
-- **DDD + Hexagonal Architecture** in each service
-
-- **Messaging (Kafka)** for asynchronous communication/events
-
-- **NoSQL** (MongoDB) in Video Service, **SQL** (PostgreSQL) in User/Playlist Services
-
-- **External API Integration** (e.g., transcoding or thumbnail service)
-
-- **Circuit Breaker** and **Tracing** (Resilience4j, Sleuth/Zipkin, or Jaeger)
-
-- **React/Next.js Front-End** with minimal routes
-
-- **OAuth2** for authentication (Keycloak or Spring Security OAuth2)
-
----
-
-## 9. Complex Relationships in Playlist Service
-
-- **Entities**:
-  - `Playlist`  
-    - OneToOne → `PlaylistMetadata`  
-    - OneToMany → `PlaylistItem`  
-    - ManyToMany → `Tag`
-  - `PlaylistMetadata`
-  - `PlaylistItem`
-  - `Tag`
-
-**Example**:
-
-```jsonc
-// POST /playlists
+This project is a study-oriented sample designed to demonstrate modern technologies and architectural concepts by building a video-sharing platform. It leverages microservices, DDD, hexagonal architecture, messaging with Kafka, external API integration, OAuth2 authentication, circuit breaker, tracing, monitoring, and a combination of SQL (PostgreSQL) and NoSQL (MongoDB) databases. In addition, the project includes a sophisticated video publication scheduling module that generates available time slots based on configurable time intervals and gaps.
+
+* * *
+
+## 1\. Project Overview
+
+### Domain
+
+A video-sharing platform with two main bounded contexts:
+
+-   **User Management**: Handles user registration, authentication, and profile data.
+-   **Video Catalog and Scheduling**: Manages video uploads, listing, streaming, and publication scheduling.
+
+### Key Features
+
+-   **Microservices**:
+    -   **User Service (Java + Spring Boot + PostgreSQL)**
+    -   **Video Service (Node.js + Express + MongoDB)**
+    -   **Playlist & Scheduling Service (Java + Spring Boot + PostgreSQL)** – manages playlists with complex JPA relationships and handles the scheduling logic.
+    -   **Gateway**: Routes incoming requests to the appropriate service while managing OAuth2, circuit breaker, and tracing.
+-   **Front-End (React/Next.js)**: A minimalist interface with screens for login, video upload, video listing, scheduling, and playlist management.
+-   **Video Publication Scheduling**:
+    -   Users can configure time intervals (e.g., 08:00 to 12:00 and 14:00 to 17:00) and a gap duration (e.g., 10 minutes).
+    -   The system automatically generates a list of available slots (e.g., 08:00, 08:10, …, 11:50, then 14:00, 14:10, …, 16:50).
+    -   Users can select a slot to schedule when a video should be published.
+* * *
+
+## 2\. Architecture & Microservices
+
+### 2.1 Gateway
+
+-   **Technology**: Spring Cloud Gateway (Java) or a similar reverse proxy (e.g., Kong, NGINX).
+-   **Responsibilities**:
+    -   Route requests:
+        -   `/api/users/**` → User Service
+        -   `/api/videos/**` → Video Service
+        -   `/api/playlists/**` → Playlist & Scheduling Service
+    -   Validate OAuth2 tokens (using Spring Security or Keycloak).
+    -   Implement circuit breaker functionality (Resilience4j or Spring Cloud Circuit Breaker).
+    -   Propagate distributed tracing headers (using Spring Cloud Sleuth/Zipkin).
+* * *
+
+### 2.2 User Service (Java + Spring Boot + PostgreSQL)
+
+### Domain & Scope
+
+-   **Primary Entity**: `User`
+    -   Attributes: `id`, `email`, `name`, `passwordHash` (or integrate with Keycloak for OAuth2).
+-   **Endpoints**:
+    -   `POST /users` – Registration (optional if an external IdP is used).
+    -   `GET /me` – Returns the authenticated user’s data.
+-   **Architecture**:
+    -   Built using DDD and hexagonal architecture.
+    -   Adapters include REST controllers and JPA repositories (using Spring Data).
+* * *
+
+### 2.3 Video Service (Node.js + Express + MongoDB)
+
+### Domain & Scope
+
+-   **Primary Entity**: `Video`
+    -   Attributes: `videoId`, `ownerId` (user reference), `title`, `description`, `status` (PROCESSING, READY), `createdAt`, `scheduledTime`, etc.
+-   **Functionalities**:
+    -   **Video Upload**: `POST /videos`
+        -   Saves metadata in MongoDB.
+        -   Stores the file locally or in an external storage service.
+        -   Publishes a `VIDEO_UPLOADED` event via Kafka.
+    -   **List Videos**: `GET /videos?ownerId=...`
+    -   **Video Streaming**: `GET /videos/:id/stream`
+    -   **Video Scheduling**: `POST /videos/:id/schedule`
+        -   Allows scheduling the publication of a video by selecting one of the available time slots.
+-   **Kafka Integration**:
+    -   Publishes and consumes events for video processing.
+* * *
+
+### 2.4 Playlist & Scheduling Service (Java + Spring Boot + PostgreSQL)
+
+### Domain & Scope
+
+This service demonstrates advanced data modeling with JPA and incorporates the video scheduling functionality.
+
+-   **Complex Relationships**:
+    -   **Playlist** entity:
+        -   **OneToOne**: with `PlaylistMetadata`
+        -   **OneToMany**: with `PlaylistItem`
+        -   **ManyToMany**: with `Tag`
+-   **Scheduling of Publication**:
+    -   **User Scheduling Configuration**:
+        -   Endpoint to configure available time intervals and gap duration.
+    -   **Time Slot Generation**:
+        -   Generates available publication slots based on the user’s configuration.
+    -   **Scheduling a Video**:
+        -   Validates and assigns a publication time to a video.
+
+### Detailed Endpoints
+
+1.  **Schedule Configuration**
+    -   `POST /schedule/config`
+    -   **Request Body**:
+
+        ```json
+        {
+          "ownerId": "user123",
+          "intervals": [
+            { "start": "08:00", "end": "12:00" },
+            { "start": "14:00", "end": "17:00" }
+          ],
+          "gapMinutes": 10
+        }
+        ```
+
+-   **Function**: Saves the user's scheduling settings, validating the intervals and gap.
+1.  **Generate Available Time Slots**
+-   `GET /schedule/options?ownerId=user123&date=2025-04-01`
+-   **Response Example**:
+
+    ```json
+    {
+      "date": "2025-04-01",
+      "availableSlots": [
+        "2025-04-01T08:00:00",
+        "2025-04-01T08:10:00",
+        "...",
+        "2025-04-01T11:50:00",
+        "2025-04-01T14:00:00",
+        "2025-04-01T14:10:00",
+        "...",
+        "2025-04-01T16:50:00"
+      ]
+    }
+    ```
+
+-   **Logic**: Iterates over each interval using the provided gap to generate a complete list of valid time slots.
+1.  **Schedule a Video**
+-   `POST /videos/:id/schedule`
+-   **Request Body**:
+
+```json
 {
-  "ownerId": 123,
-  "name": "My Favorite Playlist",
-  "metadata": {
-    "description": "Various awesome videos"
-  },
-  "tags": ["Rock", "Pop"],
-  "items": [
-    { "videoId": "abc-xyz", "position": 1 },
-    { "videoId": "def-ghi", "position": 2 }
-  ]
+  "scheduledTime": "2025-04-01T14:10:00"
 }
 ```
 
-- Creates the main `Playlist` plus any related entities.  
-- **GET /playlists/{id}** can return the playlist with metadata, tags, and paginated items, demonstrating **lazy loading** or customized queries.
+-   **Function**: Verifies the selected slot against available options and updates the video’s metadata with the scheduled publication time.
 
----
+### Integration with Playlists
 
-## Conclusion
+-   The service aggregates scheduled videos into playlists.
+-   Playlists display videos along with their scheduled publication times.
+-   Demonstrates advanced JPA relationships with lazy loading and pagination.
+* * *
 
-By keeping each microservice **small** but **distinct** in purpose:
+## 3\. Front-End (React/Next.js)
 
-- We demonstrate **DDD**, **hexagonal architecture**, and **microservices** best practices.
-- We use **SQL** and **NoSQL**.
-- We handle **video uploads/streaming** with a Node.js service.
-- We show **complex JPA relationships** (OneToOne, OneToMany, ManyToMany) in the `Playlist Service`.
-- We integrate with **Kafka** for asynchronous events.
-- We implement **OAuth2** authentication, **circuit breaker**, **distributed tracing**, and **monitoring**.
+### Pages & Features
+
+-   **Login (/login)**:
+    -   Implements the OAuth2 flow.
+    -   Stores the token (using localStorage or cookies).
+-   **My Videos (/meus-videos)**:
+    -   Lists the user’s videos (fetched via the Gateway from the Video Service).
+    -   Displays the status (processing, scheduled, published).
+-   **Video Upload (/upload)**:
+    -   A form for uploading videos (title, description, file selection).
+    -   After upload, allows the user to configure scheduling options.
+-   **Video Scheduling (/videos/:id/schedule)**:
+    -   Provides an interface where the user can:
+        -   Configure available time intervals (if not already set).
+        -   View available time slots (fetched via `GET /schedule/options`).
+        -   Select a slot to schedule the video.
+-   **Playlist Management (/playlists and /playlists/\[id\])**:
+    -   Create and view playlists.
+    -   Each playlist displays videos with their scheduled publication times.
+    -   Implements pagination for playlist items.
+-   **Routing & Auth Guards**:
+    -   Use Next.js routing with `getServerSideProps` or client-side checks to ensure only authenticated users access protected pages.
+* * *
+
+## 4\. Overall System Flow
+
+1.  **User Authentication**:
+    -   The user logs in via the front-end, obtains an OAuth2 token, which is sent in all API calls through the Gateway.
+2.  **User Service**:
+    -   Manages user registration and authentication, providing secure access to the system.
+3.  **Video Service**:
+    -   Handles video uploads and streaming.
+    -   Publishes `VIDEO_UPLOADED` events and integrates video scheduling.
+4.  **Playlist & Scheduling Service**:
+    -   Manages playlists and complex data relationships.
+    -   Handles configuration of scheduling intervals and gap.
+    -   Generates available publication slots and assigns scheduled times to videos.
+5.  **Gateway**:
+    -   Routes requests, validates tokens, applies circuit breakers, and propagates tracing headers.
+6.  **Front-End (Next.js)**:
+    -   Provides interfaces for all user interactions (login, video upload, scheduling, and playlist management).
+
+## 5\. Example Folder Structure
+
+```perl
+my-video-platform/
+├─ gateway/                 # Spring Cloud Gateway
+│   ├─ src/
+│   └─ pom.xml
+├─ user-service/            # Java, Spring Boot, PostgreSQL
+│   ├─ src/
+│   └─ pom.xml
+├─ video-service/           # Node.js, Express, MongoDB
+│   ├─ src/
+│   ├─ package.json
+│   └─ ...
+├─ playlist-scheduling/     # Java, Spring Boot, PostgreSQL, JPA (Playlists & Scheduling)
+│   ├─ src/
+│   └─ pom.xml
+├─ front-end/               # React/Next.js
+│   ├─ pages/
+│   └─ package.json
+├─ docker-compose.yml       # Kafka, PostgreSQL, MongoDB, etc.
+└─ README.md
+
+```
+
+## 6\. Technologies and Concepts Checklist
+
+-   **Microservices**:
+    -   User Service (Java + Spring Boot + PostgreSQL)
+    -   Video Service (Node.js + Express + MongoDB)
+    -   Playlist & Scheduling Service (Java + Spring Boot + PostgreSQL, JPA)
+    -   Gateway for routing
+-   **DDD + Hexagonal Architecture** in every service
+-   **Kafka Messaging** for asynchronous communication
+-   **NoSQL** (MongoDB) for video metadata, **SQL** (PostgreSQL) for users and playlists
+-   **External API Integration** (e.g., transcoding or thumbnail generation)
+-   **Circuit Breaker** and **Tracing** (using Resilience4j, Sleuth/Zipkin, or Jaeger)
+-   **OAuth2 Authentication** (using Keycloak or Spring Security OAuth2)
+-   **React/Next.js Front-End**
+-   **Complex JPA Relationships** (OneToOne, OneToMany, ManyToMany) with lazy loading and pagination
+-   **Video Upload & Streaming**
+-   **Configurable Publication Scheduling**:
+    -   Scheduling configuration (intervals and gap)
+    -   Automatic time slot generation
+    -   Video scheduling endpoint
