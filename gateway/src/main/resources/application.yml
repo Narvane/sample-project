@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: ${GATEWAY_APPLICATION_NAME}
+server:
+  port: ${GATEWAY_PORT}
