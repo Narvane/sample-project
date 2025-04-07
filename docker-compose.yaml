@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   # ------------------------------------------------------
-  # ZOOKEEPER
+  # ZOOKEEPER_INFRA
   # ------------------------------------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -18,7 +18,7 @@ services:
     profiles: ["infra"]
 
   # ------------------------------------------------------
-  # KAFKA
+  # KAFKA_INFRA
   # ------------------------------------------------------
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -39,7 +39,7 @@ services:
     profiles: ["infra"]
 
   # ------------------------------------------------------
-  # POSTGRES
+  # POSTGRES_INFRA
   # ------------------------------------------------------
   postgres:
     image: postgres:14
@@ -58,7 +58,7 @@ services:
     profiles: ["infra"]
 
   # ------------------------------------------------------
-  # MONGODB
+  # MONGODB_INFRA
   # ------------------------------------------------------
   mongodb:
     image: mongo:5
@@ -73,7 +73,7 @@ services:
     profiles: ["infra"]
 
   # ------------------------------------------------------
-  # ZIPKIN
+  # ZIPKIN_INFRA
   # ------------------------------------------------------
   zipkin:
     image: openzipkin/zipkin:latest
@@ -84,6 +84,24 @@ services:
       - my_network
     restart: always
     profiles: ["infra"]
+
+  # ------------------------------------------------------
+  # GATEWAY-APP
+  # ------------------------------------------------------
+  gateway:
+    build:
+      context: ./dockerfiles/java/withDebugger
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+      - "5005:5005"
+    environment:
+      GATEWAY_PORT: ${GATEWAY_PORT}
+      GATEWAY_APPLICATION_NAME: ${GATEWAY_APPLICATION_NAME}
+      MAIN_CLASS: com.narvane.gateway.GatewayApplication
+    volumes:
+      - ./gateway/target/classes:/app/classes
+      - ./gateway/target/dependency:/app/dependency
+    profiles: ["apps"]
 
 # ------------------------------------------------------
 # NETWORK & VOLUMES
