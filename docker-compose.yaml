@@ -95,12 +95,16 @@ services:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
       - "5005:5005"
     environment:
-      GATEWAY_PORT: ${GATEWAY_PORT}
-      GATEWAY_APPLICATION_NAME: ${GATEWAY_APPLICATION_NAME}
-      MAIN_CLASS: com.narvane.gateway.GatewayApplication
+      MAIN_CLASS_TO_DOCKERFILE: com.narvane.gateway.GatewayApplication
+    env_file:
+      - .env
     volumes:
       - ./gateway/target/classes:/app/classes
       - ./gateway/target/dependency:/app/dependency
+    networks:
+      default:
+        aliases:
+          - ${GATEWAY_GENERAL_KEY_NAME}
     profiles: ["apps"]
 
 # ------------------------------------------------------

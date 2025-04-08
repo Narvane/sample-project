@@ -1,5 +1,26 @@
 spring:
   application:
-    name: ${GATEWAY_APPLICATION_NAME}
+    name: ${GATEWAY_GENERAL_KEY_NAME}
+  cloud:
+    gateway:
+      routes:
+        - id: ${USER_SERVICE_GENERAL_KEY_NAME}
+          uri: http://${USER_SERVICE_GENERAL_KEY_NAME}:${USER_SERVICE_PORT}
+          predicates:
+            - Path=${USER_SERVICE_PATH}
+          filters:
+            - StripPrefix=1
+        - id: ${VIDEO_SERVICE_GENERAL_KEY_NAME}
+          uri: http://${VIDEO_SERVICE_GENERAL_KEY_NAME}:${VIDEO_SERVICE_PORT}
+          predicates:
+            - Path=${VIDEO_SERVICE_PATH}
+          filters:
+            - StripPrefix=1
+        - id: ${PLAYLIST_SERVICE_GENERAL_KEY_NAME}
+          uri: http://${PLAYLIST_SERVICE_GENERAL_KEY_NAME}:${PLAYLIST_SERVICE_PORT}
+          predicates:
+            - Path=${PLAYLIST_SERVICE_PATH}
+          filters:
+            - StripPrefix=1
 server:
   port: ${GATEWAY_PORT}
