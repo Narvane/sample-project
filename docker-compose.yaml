@@ -125,7 +125,7 @@ services:
       - ./gateway/target/classes:/app/classes
       - ./gateway/target/dependency:/app/dependency
     networks:
-      default:
+      my_network:
         aliases:
           - ${GATEWAY_GENERAL_KEY_NAME}
     profiles: ["apps"]
