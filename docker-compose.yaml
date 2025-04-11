@@ -52,6 +52,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./databases-init/:/docker-entrypoint-initdb.d/:ro
     networks:
       - my_network
     restart: always
@@ -86,6 +87,28 @@ services:
     profiles: ["infra"]
 
   # ------------------------------------------------------
+  # KEYCLOAK_INFRA
+  # ------------------------------------------------------
+  keycloak:
+    hostname: keycloak-local
+    image: quay.io/keycloak/keycloak:21.1.1
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN_USERNAME}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=${POSTGRES_DATABASE}
+      - KC_DB_URL=jdbc:postgresql://${POSTGRES_GENERAL_KEY_NAME}:${POSTGRES_PORT}/${KEYCLOAK_DB}
+      - KC_DB_USERNAME=${POSTGRES_USER}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD}
+    command: ["start-dev", "--import-realm"]
+    ports:
+      - "${KEYCLOAK_PORT}:8080"
+    networks:
+      - my_network
+    volumes:
+      - ./keycloak/config/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    profiles: ["infra"]
+
+  # ------------------------------------------------------
   # GATEWAY-APP
   # ------------------------------------------------------
   gateway:
@@ -95,7 +118,7 @@ services:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
       - "5005:5005"
     environment:
-      MAIN_CLASS_TO_DOCKERFILE: com.narvane.gateway.GatewayApplication
+      - MAIN_CLASS_TO_DOCKERFILE=com.narvane.gateway.GatewayApplication
     env_file:
       - .env
     volumes:
