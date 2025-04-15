@@ -116,7 +116,7 @@ services:
       context: ./dockerfiles/java/withDebugger
     ports:
       - "${GATEWAY_PORT}:${GATEWAY_PORT}"
-      - "5005:5005"
+      - "${GATEWAY_DEBUGGING_PORT}:5005"
     environment:
       - MAIN_CLASS_TO_DOCKERFILE=com.narvane.gateway.GatewayApplication
     env_file:

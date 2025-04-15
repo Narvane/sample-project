@@ -9,8 +9,11 @@
           </list>
         </option>
         <option name="sourceFilePath" value="docker-compose.yaml" />
+        <option name="upDetach" value="false" />
       </settings>
     </deployment>
-    <method v="2" />
+    <method v="2">
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/gateway/pom.xml" goal="dependency:copy-dependencies" />
+    </method>
   </configuration>
 </component>

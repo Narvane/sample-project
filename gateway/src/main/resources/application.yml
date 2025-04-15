@@ -13,28 +13,28 @@ spring:
             scope: openid
       resourceserver:
         jwt:
-          issuer-uri: https://${KEYCLOAK_GENERAL_KEY_NAME}:${KEYCLOAK_PORT}/realms/sample-project-realm
+          issuer-uri: http://${KEYCLOAK_GENERAL_KEY_NAME}:${KEYCLOAK_PORT}/realms/sample-project-realm
   cloud:
     gateway:
       routes:
         - id: ${USER_SERVICE_GENERAL_KEY_NAME}
           uri: http://${USER_SERVICE_GENERAL_KEY_NAME}:${USER_SERVICE_PORT}
           predicates:
-            - Path=${USER_SERVICE_PATH}
+            - Path=/api/${USER_SERVICE_CONTEXT_PATH}/**
           filters:
             - StripPrefix=1
             - TokenRelay=
         - id: ${VIDEO_SERVICE_GENERAL_KEY_NAME}
           uri: http://${VIDEO_SERVICE_GENERAL_KEY_NAME}:${VIDEO_SERVICE_PORT}
           predicates:
-            - Path=${VIDEO_SERVICE_PATH}
+            - Path=/api/${VIDEO_SERVICE_CONTEXT_PATH}/**
           filters:
             - StripPrefix=1
             - TokenRelay=
         - id: ${PLAYLIST_SERVICE_GENERAL_KEY_NAME}
           uri: http://${PLAYLIST_SERVICE_GENERAL_KEY_NAME}:${PLAYLIST_SERVICE_PORT}
           predicates:
-            - Path=${PLAYLIST_SERVICE_PATH}
+            - Path=/api/${PLAYLIST_SERVICE_CONTEXT_PATH}/**
           filters:
             - StripPrefix=1
             - TokenRelay=
