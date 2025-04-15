@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: ${USER_SERVICE_GENERAL_KEY_NAME}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${KEYCLOAK_GENERAL_KEY_NAME}:${KEYCLOAK_PORT}/realms/sample-project-realm
+server:
+  port: ${USER_SERVICE_PORT}
+  servlet:
+    context-path: /${USER_SERVICE_CONTEXT_PATH}
