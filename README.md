@@ -2,7 +2,7 @@
 
 # Sample Project
 
-## MindMap
+## Follow the progress of the project
 https://sharing.clickup.com/9013913601/l/h/5-90135396944-1/65f5a890d2d3e36
 
 ## Overview
