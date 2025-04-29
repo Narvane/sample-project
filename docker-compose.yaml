@@ -152,6 +152,33 @@ services:
           - ${USER_SERVICE_GENERAL_KEY_NAME}
     profiles: ["apps"]
 
+  # ------------------------------------------------------
+  # FRONT-END-APP
+  # ------------------------------------------------------
+  front-end:
+    build:
+      context: ./dockerfiles/javascript/frontEnd
+    ports:
+      - "${FRONT_END_SERVICE_PORT}:${FRONT_END_SERVICE_PORT}"
+      - "${FRONT_END_SERVICE_DEBUGGING_PORT}:9229"
+    env_file:
+      - .env
+    volumes:
+      - ./front-end:/app
+      - ./front-end/node_modules:/app/node_modules
+    networks:
+      my_network:
+        aliases:
+          - ${FRONT_END_SERVICE_GENERAL_KEY_NAME}
+    depends_on:
+      - gateway
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - NODE_OPTIONS=--inspect=0.0.0.0:${FRONT_END_SERVICE_DEBUGGING_PORT}
+      - HOST=0.0.0.0
+    profiles: ["apps"]
 
 # ------------------------------------------------------
 # NETWORK & VOLUMES
