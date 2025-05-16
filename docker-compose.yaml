@@ -153,6 +153,29 @@ services:
     profiles: ["apps"]
 
   # ------------------------------------------------------
+  # VIDEO-SERVICE-APP
+  # ------------------------------------------------------
+  video-service:
+    build:
+      context: ./dockerfiles/java/withDebugger
+    ports:
+      - "${VIDEO_SERVICE_PORT}:${VIDEO_SERVICE_PORT}"
+      - "${VIDEO_SERVICE_DEBUGGING_PORT}:5005"
+    environment:
+      - MAIN_CLASS_TO_DOCKERFILE=com.narvane.videoservice.VideoserviceApplication
+    env_file:
+      - .env
+    volumes:
+      - ./video-service/target/classes:/app/classes
+      - ./video-service/target/dependency:/app/dependency
+    networks:
+      my_network:
+        aliases:
+          - ${VIDEO_SERVICE_GENERAL_KEY_NAME}
+    profiles: [ "apps" ]
+
+
+  # ------------------------------------------------------
   # FRONT-END-APP
   # ------------------------------------------------------
   front-end:

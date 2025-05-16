@@ -1,4 +1,6 @@
 spring:
+  codec:
+    max-in-memory-size: 100MB
   application:
     name: ${GATEWAY_GENERAL_KEY_NAME}
   security:
@@ -40,3 +42,5 @@ spring:
             - TokenRelay=
 server:
   port: ${GATEWAY_PORT}
+  jetty:
+    max-http-form-post-size: 100MB

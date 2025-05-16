@@ -10,6 +10,23 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    callbacks: {
+        async jwt({ token, account, user, profile }) {
+            console.log("account", account);
+            console.log("user", user);
+            console.log("profile", profile);
+            console.log("tokenBefore", token);
+
+            if (account?.access_token) {
+                token.accessToken = account.access_token;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            session.accessToken = token.accessToken as string;
+            return session;
+        },
+    },
 };
 
 const handler = NextAuth(authOptions);
