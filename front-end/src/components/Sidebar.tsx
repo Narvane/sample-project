@@ -2,12 +2,14 @@
 "use client";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
+import {Session} from "next-auth";
+import {signOut} from "next-auth/react";
 
 const routes = [
     { href: "/",        label: "Home" }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ session }: { session: Session }) {
     const pathname = usePathname();
 
     return (
@@ -29,8 +31,8 @@ export default function Sidebar() {
             </nav>
 
             <div className="mt-auto px-6 py-4 border-t">
-                <p className="text-sm mb-2">Username</p>
-                <button className="text-left text-sm text-primary hover:underline">
+                <p className="text-sm mb-2">{session.user?.name}</p>
+                <button className="text-left text-sm text-primary hover:underline" onClick={() => signOut()}>
                     Logout
                 </button>
             </div>
