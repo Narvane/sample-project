@@ -2,6 +2,17 @@ version: "3.8"
 
 services:
   # ------------------------------------------------------
+  # ENV_REPLACER - docker-compose run --rm env-replacer
+  # ------------------------------------------------------
+  env-replacer:
+    build:
+      context: .
+      dockerfile: dockerfiles/alpine/envReplacer/Dockerfile
+    volumes:
+      - .:/app/output
+      - ./.env.template:/app/env.template:ro
+      - ./templates:/app/templates
+  # ------------------------------------------------------
   # ZOOKEEPER_INFRA
   # ------------------------------------------------------
   zookeeper:
@@ -105,7 +116,7 @@ services:
     networks:
       - my_network
     volumes:
-      - ./keycloak/config/realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - .realm-export.json:/opt/keycloak/data/import/realm-export.json
     profiles: ["infra"]
 
   # ------------------------------------------------------
@@ -153,6 +164,29 @@ services:
     profiles: ["apps"]
 
   # ------------------------------------------------------
+  # VIDEO-SERVICE-APP
+  # ------------------------------------------------------
+  video-service:
+    build:
+      context: ./dockerfiles/java/withDebugger
+    ports:
+      - "${VIDEO_SERVICE_PORT}:${VIDEO_SERVICE_PORT}"
+      - "${VIDEO_SERVICE_DEBUGGING_PORT}:5005"
+    environment:
+      - MAIN_CLASS_TO_DOCKERFILE=com.narvane.videoservice.VideoserviceApplication
+    env_file:
+      - .env
+    volumes:
+      - ./video-service/target/classes:/app/classes
+      - ./video-service/target/dependency:/app/dependency
+    networks:
+      my_network:
+        aliases:
+          - ${VIDEO_SERVICE_GENERAL_KEY_NAME}
+    profiles: [ "apps" ]
+
+
+  # ------------------------------------------------------
   # FRONT-END-APP
   # ------------------------------------------------------
   front-end:
@@ -178,6 +212,7 @@ services:
       - WATCHPACK_POLLING=true
       - NODE_OPTIONS=--inspect=0.0.0.0:${FRONT_END_SERVICE_DEBUGGING_PORT}
       - HOST=0.0.0.0
+      - NEXTAUTH_URL=http://front-end:3000
     profiles: ["apps"]
 
 # ------------------------------------------------------

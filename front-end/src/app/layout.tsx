@@ -6,6 +6,7 @@ import SessionWrapper from "@/components/SessionWrapper";
 import {getServerSession} from "next-auth";
 import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import {redirect} from "next/navigation";
+import { LoaderProvider } from "@/context/LoaderContext";
 
 export default async function RootLayout({children}: { children: React.ReactNode }) {
     const session = await getServerSession(authOptions);
@@ -16,15 +17,17 @@ export default async function RootLayout({children}: { children: React.ReactNode
 
     return (
         <html lang="en">
-        <body className="flex h-screen overflow-hidden">
-        <SessionWrapper>
-            <Sidebar session={session}/>
-            <main className="flex-1 flex flex-col">
-                <Navbar/>
-                <section className="flex-1 overflow-y-auto p-8">{children}</section>
-            </main>
-        </SessionWrapper>
-        </body>
+            <body className="flex h-screen overflow-hidden">
+                <LoaderProvider>
+                <SessionWrapper>
+                    <Sidebar session={session}/>
+                    <main className="flex-1 flex flex-col">
+                        <Navbar/>
+                        <section className="flex-1 overflow-y-auto p-8">{children}</section>
+                    </main>
+                </SessionWrapper>
+                </LoaderProvider>
+            </body>
         </html>
     );
 }
