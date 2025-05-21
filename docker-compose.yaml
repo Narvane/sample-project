@@ -2,6 +2,17 @@ version: "3.8"
 
 services:
   # ------------------------------------------------------
+  # ENV_REPLACER - docker-compose run --rm env-replacer
+  # ------------------------------------------------------
+  env-replacer:
+    build:
+      context: .
+      dockerfile: dockerfiles/alpine/envReplacer/Dockerfile
+    volumes:
+      - .:/app/output
+      - ./.env.template:/app/env.template:ro
+      - ./templates:/app/templates
+  # ------------------------------------------------------
   # ZOOKEEPER_INFRA
   # ------------------------------------------------------
   zookeeper:
@@ -105,7 +116,7 @@ services:
     networks:
       - my_network
     volumes:
-      - ./keycloak/config/realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - .realm-export.json:/opt/keycloak/data/import/realm-export.json
     profiles: ["infra"]
 
   # ------------------------------------------------------
@@ -201,6 +212,7 @@ services:
       - WATCHPACK_POLLING=true
       - NODE_OPTIONS=--inspect=0.0.0.0:${FRONT_END_SERVICE_DEBUGGING_PORT}
       - HOST=0.0.0.0
+      - NEXTAUTH_URL=http://front-end:3000
     profiles: ["apps"]
 
 # ------------------------------------------------------

@@ -27,8 +27,8 @@
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
   "sslRequired": "external",
-  "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
   "rememberMe": false,
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
@@ -314,6 +314,7 @@
           "attributes": {}
         }
       ],
+      "front-end": [],
       "account": [
         {
           "id": "fce02712-d6af-4a5f-b1cf-51a54437fd9e",
@@ -652,22 +653,75 @@
       ]
     },
     {
-      "id": "e94a0e8b-ef7f-4f0d-8629-a667ea75a4a4",
-      "clientId": "gateway-client",
-      "name": "",
+      "id": "6351c3fe-aa7b-4106-a88c-24f6b43e760d",
+      "clientId": "front-end",
+      "name": "front-end",
       "description": "",
-      "rootUrl": "http://localhost:8080",
-      "adminUrl": "http://localhost:8080",
+      "rootUrl": "",
+      "adminUrl": "",
       "baseUrl": "",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:8080/*"
+        "http://${FRONT_END_SERVICE_GENERAL_KEY_NAME}:${FRONT_END_SERVICE_PORT}/api/auth/callback/keycloak"
       ],
       "webOrigins": [
-        "http://localhost:8080"
+        "http://${FRONT_END_SERVICE_GENERAL_KEY_NAME}:${FRONT_END_SERVICE_PORT}",
+        "+"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "display.on.consent.screen": "false",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "id": "e94a0e8b-ef7f-4f0d-8629-a667ea75a4a4",
+      "clientId": "gateway-client",
+      "name": "",
+      "description": "",
+      "rootUrl": "http://${GATEWAY_GENERAL_KEY_NAME}:${GATEWAY_PORT}",
+      "adminUrl": "http://${GATEWAY_GENERAL_KEY_NAME}:${GATEWAY_PORT}",
+      "baseUrl": "",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [
+        "http://${GATEWAY_GENERAL_KEY_NAME}:${GATEWAY_PORT}/*"
+      ],
+      "webOrigins": [
+        "http://${GATEWAY_GENERAL_KEY_NAME}:${GATEWAY_PORT}"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -2257,8 +2311,8 @@
     "cibaExpiresIn": "120",
     "cibaAuthRequestedUserHint": "login_hint",
     "oauth2DeviceCodeLifespan": "600",
-    "clientOfflineSessionMaxLifespan": "0",
     "oauth2DevicePollingInterval": "5",
+    "clientOfflineSessionMaxLifespan": "0",
     "clientSessionIdleTimeout": "0",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",

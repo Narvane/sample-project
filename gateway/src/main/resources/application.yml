@@ -44,3 +44,5 @@ server:
   port: ${GATEWAY_PORT}
   jetty:
     max-http-form-post-size: 100MB
+urls:
+  front-end: http://${FRONT_END_SERVICE_GENERAL_KEY_NAME}:${FRONT_END_SERVICE_PORT}
