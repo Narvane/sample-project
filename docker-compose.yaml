@@ -82,7 +82,10 @@ services:
     networks:
       - my_network
     restart: always
-    profiles: ["infra"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    profiles: [ "infra" ]
 
   # ------------------------------------------------------
   # ZIPKIN_INFRA
