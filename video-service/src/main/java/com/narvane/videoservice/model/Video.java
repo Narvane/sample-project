@@ -9,7 +9,7 @@ import java.io.InputStream;
 @AllArgsConstructor
 public class Video {
     private String title;
-    private InputStream bytes;
+    private InputStream inputStream;
     private String fileName;
     private String contentType;
 }

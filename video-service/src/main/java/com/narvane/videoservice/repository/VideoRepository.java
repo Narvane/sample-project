@@ -15,14 +15,15 @@ public class VideoRepository {
 
     private final VideoMongoRepository mongoRepository;
 
-    public void save(Video video, String tempPath) {
-        mongoRepository.save(new VideoEntity(
+    public UUID save(Video video, String tempPath) {
+        return mongoRepository.save(new VideoEntity(
                 UUID.randomUUID(),
                 UserContextHolder.getUserId(),
                 video.getTitle(),
                 tempPath,
                 video.getFileName(),
                 video.getContentType()
-        ));
+        )).getId();
     }
+
 }

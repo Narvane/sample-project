@@ -21,7 +21,7 @@ public class VideoController {
                        @RequestParam("multipartFile") MultipartFile multipartFile) throws IOException {
         service.save(new Video(title,
                 multipartFile.getInputStream(),
-                multipartFile.getName(),
+                multipartFile.getOriginalFilename(),
                 multipartFile.getContentType()
         ));
     }

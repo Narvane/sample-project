@@ -1,12 +1,12 @@
 db = db.getSiblingDB('mydb');
 
 db.createUser({
-    user: 'admin',
-    pwd: 'admin123',
+    user: `${MONGODB_USERNAME}`,
+    pwd: `${MONGODB_PASSWORD}`,
     roles: [
         {
             role: 'readWrite',
-            db: 'mydb'
+            db: `${MONGODB_DATABASE}`
         }
     ]
 });
