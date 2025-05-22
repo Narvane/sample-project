@@ -1,7 +1,5 @@
 import { getSession } from "next-auth/react";
 
-const BASE_URL = `http://gateway:8085`;
-
 export async function apiFetch(path: string, init: RequestInit = {}) {
     const session = await getSession();
 
@@ -14,7 +12,7 @@ export async function apiFetch(path: string, init: RequestInit = {}) {
 
     const fullUrl = path.startsWith("http")
         ? path
-        : `${BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 
     return fetch(fullUrl, {
         ...init,

@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class VideoProcessor {
@@ -13,8 +15,9 @@ public class VideoProcessor {
 
     private final KafkaTemplate<String, VideoEvent> kafkaTemplate;
 
-    public void send(String tempPath) {
+    public void send(UUID videoId, String tempPath) {
         VideoEvent event = new VideoEvent();
+        event.setVideoId(videoId);
         event.setTempPath(tempPath);
         kafkaTemplate.send(VIDEOS_TO_PROCESS_TOPIC, event);
     }

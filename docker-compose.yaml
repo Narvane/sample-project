@@ -63,7 +63,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./databases-init/:/docker-entrypoint-initdb.d/:ro
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/:ro
     networks:
       - my_network
     restart: always
@@ -79,7 +79,7 @@ services:
       - "${MONGODB_PORT}:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./databases-init/:/docker-entrypoint-initdb.d
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - my_network
     restart: always
@@ -217,6 +217,7 @@ services:
       - NODE_OPTIONS=--inspect=0.0.0.0:${FRONT_END_SERVICE_DEBUGGING_PORT}
       - HOST=0.0.0.0
       - NEXTAUTH_URL=http://front-end:3000
+      - NEXT_PUBLIC_API_BASE_URL=http://${GATEWAY_GENERAL_KEY_NAME}:${GATEWAY_PORT}
     profiles: ["apps"]
 
 # ------------------------------------------------------
