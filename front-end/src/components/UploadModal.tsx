@@ -18,7 +18,7 @@ export default function UploadModal({ isOpen, onClose }: { isOpen: boolean; onCl
         try {
             const formData = new FormData();
             formData.append("title", title);
-            formData.append("video", file);
+            formData.append("multipartFile", file);
 
             const res = await apiFetch("/api/videos/upload", {
                 method: "POST",
