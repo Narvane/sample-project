@@ -41,7 +41,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:${KAFKA_PORT}"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://${KAFKA_GENERAL_KEY_NAME}:${KAFKA_PORT}"
       KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
@@ -79,12 +79,13 @@ services:
       - "${MONGODB_PORT}:27017"
     volumes:
       - mongodb_data:/data/db
+      - ./databases-init/:/docker-entrypoint-initdb.d
     networks:
       - my_network
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
     profiles: [ "infra" ]
 
   # ------------------------------------------------------

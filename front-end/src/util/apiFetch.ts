@@ -1,6 +1,6 @@
 import { getSession } from "next-auth/react";
 
-const BASE_URL = `http://${process.env.GATEWAY_GENERAL_KEY_NAME}:${process.env.GATEWAY_PORT}`;
+const BASE_URL = `http://gateway:8085`;
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
     const session = await getSession();
