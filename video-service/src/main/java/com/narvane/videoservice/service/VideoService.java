@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.UUID;
 
 import static com.narvane.videoservice.util.LocalStorageUtil.storeTemporarily;
 
@@ -17,6 +18,10 @@ public class VideoService {
 
     private final VideoRepository repository;
     private final VideoProcessor processor;
+
+    public Video findById(UUID id) {
+        return repository.findById(id);
+    }
 
     @Transactional(rollbackFor = Exception.class)
     public void save(Video video) throws IOException {
@@ -30,6 +35,16 @@ public class VideoService {
             Files.deleteIfExists(tempFile.toPath());
             throw e;
         }
+    }
+
+    @Transactional
+    public Video update(UUID id, Video videoUpdate) {
+        var savedVideo = findById(id);
+
+        savedVideo.setTitle(videoUpdate.getTitle());
+        savedVideo.setProcessStatus(videoUpdate.getProcessStatus());
+
+        return repository.update(id, savedVideo);
     }
 
 }

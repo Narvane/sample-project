@@ -2,17 +2,6 @@ version: "3.8"
 
 services:
   # ------------------------------------------------------
-  # ENV_REPLACER - docker-compose run --rm env-replacer
-  # ------------------------------------------------------
-  env-replacer:
-    build:
-      context: .
-      dockerfile: dockerfiles/alpine/envReplacer/Dockerfile
-    volumes:
-      - .:/app/output
-      - ./.env.template:/app/env.template:ro
-      - ./templates:/app/templates
-  # ------------------------------------------------------
   # ZOOKEEPER_INFRA
   # ------------------------------------------------------
   zookeeper:
@@ -63,7 +52,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/:ro
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql:ro
     networks:
       - my_network
     restart: always
@@ -120,7 +109,7 @@ services:
     networks:
       - my_network
     volumes:
-      - .realm-export.json:/opt/keycloak/data/import/realm-export.json
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
     profiles: ["infra"]
 
   # ------------------------------------------------------

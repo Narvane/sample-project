@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  # ------------------------------------------------------
+  # ENV_REPLACER - docker-compose run --rm env-replacer
+  # ------------------------------------------------------
+  env-replacer:
+    build:
+      context: .
+      dockerfile: dockerfiles/alpine/envReplacer/Dockerfile
+    volumes:
+      - .:/app/output
+      - ./.env.template:/app/env.template:ro
+      - ./templates:/app/templates
